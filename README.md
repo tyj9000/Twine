@@ -1,6 +1,6 @@
-# Twine
+# <img src="./assets/logo.png" alt="Twine Logo" width="80"/> 
 
-![Twine Logo](./assets/logo.png)
+
 
 Twine is a lightweight tweening and animation library for LÖVE (Love2D). It provides simple APIs for animating properties, handling easing, and managing animation lifecycles.
 
@@ -59,3 +59,53 @@ function love.draw()
     love.graphics.setFont(love.graphics.newFont(20))
 end
 ```
+---
+
+## API Reference
+>Parameters
+```lua
+local Tween = Twine.newTween(target, duration, easing, goal, shouldReturn, returnValue)
+````
+**Params**
+
++ **target:** Table to animate (e.g., {Scale = {1,1}})
++ **duration:** Time in seconds
++ **easing:** Easing function name ("Linear", "InQuad", etc.)
++ **goal:** Table of properties to tween
++ **shouldReturn:** (optional) If true, returns to start after reaching goal
++ **returnValue:** (optional) Table of values to return to
+
+---
+**Methods**
+
++ **:Play()--** Start the tween
++ **:Pause()--** Pause the tween
++ **:Resume()--** Resume the tween
++ **:Stop()--** Cancel the tween
++ **:getState--** Returns "running", "paused", or "stopped"
++ **:Finished--** Returns true if stopped
+
+---
+**Signals**
+
++ **Started--** Fires when tween starts
++ **Completed--** Fires when tween ends
++ **StateChanged--**  Fires on state change ("running", "paused", "stopped")
+
+---
+## Updating
+>Updating tweens via dt
+```lua
+function love.update(dt)
+    Twine.updateAll(dt)
+end
+````
+
+---
+
+MIT License Copyright (c) 2025 tyj9000 
+  
+
+
+
+
