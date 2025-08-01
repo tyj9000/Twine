@@ -1,6 +1,6 @@
-local Twine = require("Twine")
+local Twine = require("Twine") --Requite Twine
 
-local Button = {
+local Button = { 
     Position = {100, 100},
     Size = {200, 50},
     Scale = {1, 1},
@@ -8,9 +8,9 @@ local Button = {
     TextColor = {1, 1, 1},
     Hovered = false,
     Clicked = false,
-}
+} --Define a button
 
-local onclick
+local onclick --Make onclick global
 
 function love.load()
     --Create a tween for the button scale
@@ -28,6 +28,7 @@ function love.update(dt)
 end
 
 function love.draw()
+    --Draw the button
     local w, h = Button.Size[1] * Button.Scale[1], Button.Size[2] * Button.Scale[2]
     local x, y = Button.Position[1], Button.Position[2]
 
