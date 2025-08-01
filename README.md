@@ -5,4 +5,4 @@
 <h1 align="center">Twine</h1>
 <p align="center"><em>A lightweight tween animation framework for Love2D</em></p>
 
-## Getting Started with Twine
+<h2 align="center"><em>A lightweight tween animation framework for Love2D</em></p>
