@@ -82,8 +82,8 @@ local Tween = Twine.newTween(target, duration, easing, goal, shouldReturn, retur
 + **:Pause()--** Pause the tween
 + **:Resume()--** Resume the tween
 + **:Stop()--** Cancel the tween
-+ **:getState--** Returns "running", "paused", or "stopped"
-+ **:Finished--** Returns true if stopped
++ **:getState()--** Returns "running", "paused", or "stopped"
++ **:Finished()--** Returns true if stopped
 
 ---
 **Signals**
