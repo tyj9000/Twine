@@ -1,4 +1,5 @@
-![Twine logo](./assets/logo.png) # Twine 
+![Twine logo](./assets/logo.png) 
+# Twine 
 A lightweight tween animation framework for Love2D
 
 **Getting Started with Twine**
