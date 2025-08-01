@@ -2,7 +2,7 @@
 
 
 
-Twine is a lightweight tweening and animation library for LÖVE (Love2D). It provides simple APIs for animating properties, handling easing, and managing animation lifecycles inspired by Roblox's event driven TweenService.
+Twine is a lightweight tweening and animation library for LÖVE (Love2D). It provides simple APIs for animating properties, handling easing, and managing animation lifecycles inspired by Roblox's event-driven TweenService.
 
 ---
 
