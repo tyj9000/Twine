@@ -85,6 +85,8 @@ local Tween = Twine.newTween(target, duration, easing, goal, shouldReturn, retur
 + **:getState()--** Returns "running", "paused", or "stopped"
 + **:Finished()--** Returns true if stopped
 
+**Bulk (Group Tween)**
+.Bulk({tweens})--** Creates a bulk with tweens in table, same methods apply.
 ---
 **Signals**
 
