@@ -1,33 +1,10 @@
---[[
-MIT License
-
-Copyright (c) 2025 tyj9000
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-]]--
-
 local Tween = require("Twine.tween") 
+local Bulk = require("Twine.bulk")
 
 local activeTweens = {}
+local activeSeqBulks = {}
 
 local Twine = {}
-
 
 function Twine.newTween(target, time, easing, goalProps, rebounce, rval)
     local tween = Tween.new(target, time, easing, goalProps, rebounce, rval)
@@ -35,23 +12,22 @@ function Twine.newTween(target, time, easing, goalProps, rebounce, rval)
     return tween
 end
 
-function Twine.playAudio(audiofile)
-    local audio = love.audio.newSource(audiofile, "static")
-    audio:play()
+function Twine.Bulk(tweens)
+    return Bulk.new(tweens)
 end
 
-function Twine.stopAudio(audiofile)
-    local audio = love.audio.newSource(audiofile, "static")
-    audio:stop()
+function Twine.SeqBulk(gap, tweens)
+    local group = Bulk.Seq(gap, tweens)
+    table.insert(activeSeqBulks, group)
+    return group
 end
 
 function Twine._getActiveTweens()
     return activeTweens
 end
 
-
-
 function Twine.updateAll(dt)
+    -- update tweens
     for i = #activeTweens, 1, -1 do
         local tween = activeTweens[i]
         tween:update(dt)
@@ -59,7 +35,15 @@ function Twine.updateAll(dt)
             table.remove(activeTweens, i)
         end
     end
-end
 
+    -- update seq bulks
+    for i = #activeSeqBulks, 1, -1 do
+        local seq = activeSeqBulks[i]
+        seq:update(dt)
+        if seq:Finished() then
+            table.remove(activeSeqBulks, i)
+        end
+    end
+end
 
 return Twine

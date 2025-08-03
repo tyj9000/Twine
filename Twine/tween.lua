@@ -1,28 +1,3 @@
---[[
-MIT License
-
-Copyright (c) 2025 tyj9000
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-]]--
-
-
 local Easing = require("Twine.easing")
 local Signal = require("Twine.signal")
 
@@ -32,11 +7,12 @@ Tween.__index = Tween
 local activeTweens = {}
 
 function Tween.new(target, duration, easingName, goal, shouldReturn, returnValue)
-    if activeTweens[target] then
-        activeTweens[target].canceled = true
-    end
+    Tween.cancelAllFor(target)
 
     local self = setmetatable({}, Tween)
+
+    activeTweens[target] = self
+
     self.target = target
     self.duration = duration
     self.elapsed = 0
@@ -48,6 +24,8 @@ function Tween.new(target, duration, easingName, goal, shouldReturn, returnValue
     self.returning = false
     self.canceled = false
     self.running = false
+    self._listed = false
+    self._paused = false
 
     -- Events
     self.Started = Signal.new()
@@ -61,14 +39,22 @@ function Tween.new(target, duration, easingName, goal, shouldReturn, returnValue
     return self
 end
 
+function Tween:_cleanupSignals()
+    self.Started:DisconnectAll()
+    self.Completed:DisconnectAll()
+    self.StateChanged:DisconnectAll()
+end
+
 function Tween:Play()
     if not self.running then
         self.elapsed = 0
         self.running = true
         self.canceled = false
         self.returning = false
+        self._paused = false
+
         self.Started:Fire()
-        self.StateChanged:Fire("running") -- 🔥
+        self.StateChanged:Fire("running")
 
         local list = require("Twine")._getActiveTweens()
         if not self._listed then
@@ -82,7 +68,7 @@ function Tween:Pause()
     if self.running and not self.canceled then
         self.running = false
         self._paused = true
-        self.StateChanged:Fire("paused") -- 🔥
+        self.StateChanged:Fire("paused")
     end
 end
 
@@ -90,7 +76,7 @@ function Tween:Resume()
     if self._paused and not self.canceled then
         self.running = true
         self._paused = false
-        self.StateChanged:Fire("running") -- 🔥
+        self.StateChanged:Fire("running")
     end
 end
 
@@ -98,9 +84,9 @@ function Tween:Stop()
     self.canceled = true
     self.running = false
     self._listed = false
-    self.StateChanged:Fire("stopped") -- 🔥
+    self:_cleanupSignals()
+    self.StateChanged:Fire("stopped")
 end
-
 
 function Tween:getState()
     if self.canceled then
@@ -114,13 +100,11 @@ function Tween:getState()
     end
 end
 
-
-
 function Tween.copy(value)
     if type(value) == "table" then
         local out = {}
-        for i, v in ipairs(value) do
-            out[i] = v
+        for k, v in pairs(value) do -- ✅ now works for {x=_, y=_}
+            out[k] = v
         end
         return out
     else
@@ -131,8 +115,8 @@ end
 function Tween:lerp(a, b, t)
     if type(a) == "table" then
         local result = {}
-        for i = 1, #a do
-            result[i] = a[i] + (b[i] - a[i]) * t
+        for k, _ in pairs(a) do
+            result[k] = a[k] + (b[k] - a[k]) * t
         end
         return result
     else
@@ -170,7 +154,7 @@ end
 
 function Tween.cancelAllFor(target)
     if activeTweens[target] then
-        activeTweens[target].canceled = true
+        activeTweens[target]:Stop()
         activeTweens[target] = nil
     end
 end
