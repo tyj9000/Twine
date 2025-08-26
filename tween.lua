@@ -140,7 +140,6 @@ function Tween:update(dt)
         self.target[k] = self:lerp(from[k], to[k], t)
     end
 
-    -- 🔥 Keyframe check
     for _, frame in ipairs(self.keyframes) do
         local prop, expected, label = frame[1], frame[2], frame[3]
         local useTol = frame[4]
@@ -202,3 +201,4 @@ function Tween.cancelAllFor(target)
 end
 
 return Tween
+
