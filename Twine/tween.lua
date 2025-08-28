@@ -6,11 +6,10 @@ Tween.__index = Tween
 
 local activeTweens = {}
 
-function Tween.new(target, duration, easingName, goal, shouldReturn, returnValue)
+function Tween.new(target, duration, easingName, goal, shouldReturn, returnValue, keyframes)
     Tween.cancelAllFor(target)
 
     local self = setmetatable({}, Tween)
-
     activeTweens[target] = self
 
     self.target = target
@@ -27,10 +26,15 @@ function Tween.new(target, duration, easingName, goal, shouldReturn, returnValue
     self._listed = false
     self._paused = false
 
+    -- Keyframes: { prop, expected, label, useTolerance?, toleranceAmount?, repeatable? }
+    self.keyframes = keyframes or {}
+    self.triggered = {}
+
     -- Events
     self.Started = Signal.new()
     self.Completed = Signal.new()
     self.StateChanged = Signal.new()
+    self.Callback = Signal.new()
 
     for k, v in pairs(goal) do
         self.start[k] = Tween.copy(target[k])
@@ -43,6 +47,7 @@ function Tween:_cleanupSignals()
     self.Started:DisconnectAll()
     self.Completed:DisconnectAll()
     self.StateChanged:DisconnectAll()
+    self.Callback:DisconnectAll()
 end
 
 function Tween:Play()
@@ -52,6 +57,7 @@ function Tween:Play()
         self.canceled = false
         self.returning = false
         self._paused = false
+        self.triggered = {}
 
         self.Started:Fire()
         self.StateChanged:Fire("running")
@@ -89,23 +95,16 @@ function Tween:Stop()
 end
 
 function Tween:getState()
-    if self.canceled then
-        return "stopped"
-    elseif self._paused then
-        return "paused"
-    elseif self.running then
-        return "running"
-    else
-        return "stopped"
-    end
+    if self.canceled then return "stopped"
+    elseif self._paused then return "paused"
+    elseif self.running then return "running"
+    else return "stopped" end
 end
 
 function Tween.copy(value)
     if type(value) == "table" then
         local out = {}
-        for k, v in pairs(value) do -- ✅ now works for {x=_, y=_}
-            out[k] = v
-        end
+        for k, v in pairs(value) do out[k] = v end
         return out
     else
         return value
@@ -124,6 +123,10 @@ function Tween:lerp(a, b, t)
     end
 end
 
+local function approxEqual(a, b, tol)
+    return math.abs(a - b) <= (tol or 0.05)
+end
+
 function Tween:update(dt)
     if not self.running or self.canceled then return end
 
@@ -135,6 +138,44 @@ function Tween:update(dt)
 
     for k, _ in pairs(self.goal) do
         self.target[k] = self:lerp(from[k], to[k], t)
+    end
+
+    for _, frame in ipairs(self.keyframes) do
+        local prop, expected, label = frame[1], frame[2], frame[3]
+        local useTol = frame[4]
+        local tolAmount = frame[5] or 0.05
+        local repeatable = frame[6]
+
+        if (repeatable or not self.triggered[label]) and self.target[prop] then
+            local match = true
+
+            if type(expected) == "table" then
+                for i = 1, #expected do
+                    local actual = self.target[prop][i]
+                    if useTol then
+                        if not approxEqual(actual, expected[i], tolAmount) then
+                            match = false
+                            break
+                        end
+                    else
+                        if actual ~= expected[i] then
+                            match = false
+                            break
+                        end
+                    end
+                end
+            else
+                local actual = self.target[prop]
+                match = useTol and approxEqual(actual, expected, tolAmount) or actual == expected
+            end
+
+            if match then
+                self.Callback:Fire(label)
+                if not repeatable then
+                    self.triggered[label] = true
+                end
+            end
+        end
     end
 
     if self.elapsed >= self.duration then
